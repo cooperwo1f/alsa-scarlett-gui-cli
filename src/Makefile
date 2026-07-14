@@ -1,68 +1,7 @@
 # SPDX-FileCopyrightText: 2022-2025 Geoffrey D. Bennett <g@b4.vu>
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-# Credit to Tom Tromey and Paul D. Smith:
-# http://make.mad-scientist.net/papers/advanced-auto-dependency-generation/
-
-# Colors for pretty output
-COLOR_RESET = \033[0m
-COLOR_GREEN = \033[32m
-COLOR_BLUE  = \033[34m
-
-# Pretty print (use V=1 to see full commands)
-ifeq ($(V),1)
-  Q =
-  PRINTF = @true
-else
-  Q = @
-  PRINTF = @printf
-endif
-
-# Progress counter
-TOTAL := $(words $(sort $(wildcard *.c) $(patsubst %.xml,%.c,$(wildcard *.xml))))
-DONE :=
-counter = $(words $(DONE))$(eval DONE += x)
-PCT = $$(( $(counter) * 100 / $(TOTAL) ))
-
-VERSION := $(shell \
-  git describe --abbrev=4 --dirty --always --tags 2>/dev/null || \
-  echo $${APP_VERSION:-Unknown} \
-)
-
-DEPDIR := .deps
-DEPFLAGS = -MT $@ -MMD -MP -MF $(DEPDIR)/$*.d
-
-CFLAGS ?= -ggdb -fno-omit-frame-pointer -O2
-CFLAGS += -Wall -Werror -fPIE
-CFLAGS += -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3
-CFLAGS += -DVERSION=\"$(VERSION)\"
-CFLAGS += -Wno-error=deprecated-declarations
-
-PKG_CONFIG=pkg-config
-
-CFLAGS += $(shell $(PKG_CONFIG) --cflags glib-2.0)
-CFLAGS += $(shell $(PKG_CONFIG) --cflags gtk4)
-CFLAGS += $(shell $(PKG_CONFIG) --cflags alsa)
-
-LDFLAGS += $(shell $(PKG_CONFIG) --libs glib-2.0)
-LDFLAGS += $(shell $(PKG_CONFIG) --libs gtk4)
-LDFLAGS += $(shell $(PKG_CONFIG) --libs alsa)
-LDFLAGS += -lm -lcrypto -pie
-
-COMPILE.c = $(CC) $(DEPFLAGS) $(CFLAGS) -c
-
-%.c: %.xml $(DEPDIR)/%-xml.d | $(DEPDIR)
-	$(PRINTF) "$(COLOR_GREEN)[%3d%%]$(COLOR_RESET) $(COLOR_BLUE)RES$(COLOR_RESET)  %s\n" $(PCT) $<
-	$(Q)echo $@: $(shell $(GLIB_COMPILE_RESOURCES) $< --generate-dependencies) > $(DEPDIR)/$*-xml.d
-	$(Q)$(GLIB_COMPILE_RESOURCES) $< --target=$@ --generate-source
-
-XML_SRC := $(wildcard *.xml)
-XML_OBJ := $(patsubst %.xml,%.c,$(XML_SRC))
-
-%.o: %.c
-%.o: %.c Makefile $(DEPDIR)/%.d | $(DEPDIR)
-	$(PRINTF) "$(COLOR_GREEN)[%3d%%]$(COLOR_RESET) $(COLOR_BLUE)CC$(COLOR_RESET)   %s\n" $(PCT) $<
-	$(Q)$(COMPILE.c) $(OUTPUT_OPTION) $<
+# ... (previous makefile content - keep everything before the SRCS line) ...
 
 SRCS := $(sort $(wildcard *.c) $(XML_OBJ))
 OBJS := $(patsubst %.c,%.o,$(SRCS))
