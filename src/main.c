@@ -11,6 +11,7 @@
 #include "scarlett4-firmware.h"
 #include "window-hardware.h"
 #include "window-iface.h"
+#include "cli.h"
 
 GtkApplication *app;
 
@@ -70,6 +71,14 @@ static void open_cb(
 }
 
 int main(int argc, char **argv) {
+  // Check for CLI mode
+  if (argc > 1 && strcmp(argv[1], "--cli") == 0) {
+    // CLI mode: skip GTK initialization
+    int result = cli_run(argc - 1, argv + 1);
+    exit(result);
+  }
+
+  // GUI mode: normal GTK application
   app = gtk_application_new(
     "vu.b4.alsa-scarlett-gui", G_APPLICATION_HANDLES_OPEN
   );
